@@ -38,21 +38,26 @@ with open('data/article_info.csv', 'r') as file:
         articles_info['Article ' + current_article_num]['RelevantToTask'] = row[1]
         articles_info['Article ' + current_article_num]['Original'] = row[2]
 
-
 for key, value in result.items():
     cur = result[key] # key --> Participant code; cur --> each participant's individual info dict
     cur['total_article_duration'] = 0
-    if not cur['raw_data_list']:
+    cur['article_stats'] = {}
+    if len(cur['raw_data_list']) == 0:
         cur['total_article_duration'] = 0
-        cur['total_exploration_path'] = 0
+        cur['total_exploration_path_length'] = 0
         cur['avg_time_per_article'] = 'NA'
     else:
         for r in cur['raw_data_list']:
             dur = r[duration_enum]
+            article = r[ActionParameters_enum]
+            if article in cur['article_stats']:
+                cur['article_stats'][article] += 1
+            else:
+                cur['article_stats'][article] = 1
             if dur != 'NA':
                 cur['total_article_duration'] += int(dur)
-        cur['total_exploration_path'] = len(cur['raw_data_list'])
+        cur['total_exploration_path_length'] = len(cur['raw_data_list'])
         cur['avg_time_per_article'] = cur['total_article_duration']/len(cur['raw_data_list'])
 
-print(result)
+pprint.pprint(result)
 
