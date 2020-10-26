@@ -42,22 +42,31 @@ for key, value in result.items():
     cur = result[key] # key --> Participant code; cur --> each participant's individual info dict
 
     # stats collected and default values
+
     cur['total_article_duration'] = 0
+    cur['relevant_article_duration'] = 0
+    cur['irrelevant_article_duration'] = 0
+
 
     cur['article_stats'] = {}
 
-    cur['total_unique_article_read_count'] = 0
 
+    cur['total_unique_article_read_count'] = 0
     cur['relevant_unique_article_read_count'] = 0
+    cur['irrelevant_unique_article_read_count'] = 0
+
 
     cur['total_exploration_path_length'] = 0
 
-    cur['total_article_read_count_in_path'] = 0
 
+    cur['total_article_read_count_in_path'] = 0
     cur['relevant_article_read_count_in_path'] = 0
+    cur['irrelevant_article_read_count_in_path'] = 0
 
     if len(cur['raw_data_list']) == 0:
         cur['avg_time_per_article'] = 'NA' # finish cur['avg_time_per_article']
+        cur['avg_time_per_relevant_article'] = 'NA' # finish cur['avg_time_per_relevant_article']
+        cur['avg_time_per_irrelevant_article'] = 'NA' # finish cur['avg_time_per_irrelevant_article']
     else:
         for r in cur['raw_data_list']:
             dur = r[duration_enum]
@@ -68,7 +77,8 @@ for key, value in result.items():
                 cur['article_stats'][article] = 1 # finish cur['article_stats']
                 if articles_info[article]['RelevantToTask'] == 'yes':
                     cur['relevant_unique_article_read_count'] += 1 # finish cur['relevant_unique_article_read_count']
-
+                else:
+                    cur['irrelevant_unique_article_read_count'] += 1 # finish cur['irrelevant_unique_article_read_count']
             if dur != 'NA':
                 cur['total_article_duration'] += int(dur) # finish cur['total_article_duration']
 
@@ -76,11 +86,34 @@ for key, value in result.items():
 
             if articles_info[article]['RelevantToTask'] == 'yes':
                 cur['relevant_article_read_count_in_path'] += 1  # finish cur['relevant_article_read_count_in_path']
+                if dur != 'NA':
+                    cur['relevant_article_duration'] += int(dur)  # finish cur['relevant_article_duration']
+            else:
+                cur['irrelevant_article_read_count_in_path'] += 1  # finish cur['irrelevant_article_read_count_in_path']
+                if dur != 'NA':
+                    cur['irrelevant_article_duration'] += int(dur)  # finish cur['irrelevant_article_duration']
 
         cur['total_exploration_path_length'] = len(cur['raw_data_list']) # finish cur['total_exploration_path_length']
+
         cur['avg_time_per_article'] = cur['total_article_duration']/len(cur['raw_data_list']) # finish cur['avg_time_per_article']
+
         cur['total_unique_article_read_count'] = len(cur['article_stats']) # finish cur['total_unique_article_read_count']
 
+        if cur['relevant_article_read_count_in_path'] != 0:
+            cur['avg_time_per_relevant_article'] = cur['relevant_article_duration']/cur['relevant_article_read_count_in_path'] # finish cur['avg_time_per_relevant_article']
+        else:
+            cur['avg_time_per_relevant_article'] = 0
 
-pprint.pprint(result)
+        if cur['irrelevant_article_read_count_in_path'] != 0:
+            cur['avg_time_per_irrelevant_article'] = cur['irrelevant_article_duration']/cur['irrelevant_article_read_count_in_path'] # finish cur['avg_time_per_irrelevant_article']
+        else:
+            cur['avg_time_per_irrelevant_article'] = 0
+
+for key, value in result.items():
+    print(key)
+    for k, v in value.items():
+        if k != 'raw_data_list':
+            print(k,v)
+
+
 
