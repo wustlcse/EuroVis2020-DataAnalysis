@@ -75,25 +75,20 @@ for key, value in result.items():
     cur['avg_revisitation_rate_total_articles'] = 0
     cur['avg_revisitation_rate_relevant_articles'] = 0
     cur['avg_revisitation_rate_irrelevant_articles'] = 0
-
-    datetime_object = datetime.strptime('1:33PM', '%I:%M%p')
-    print(datetime_object)
-
-    datetime_object = datetime.strptime('10H 30M 34S', '%IH %MM %SS')
-    print(datetime_object)
-
     print("------")
     if len(cur['raw_any_data_list']) == 0:
         cur['how_long_it_takes_to_read_first_relevant_article'] = 'NA'
     else:
         for any_data_row in cur['raw_any_data_list']:
             print(any_data_row)
-            if any_data_row[ActionType_enum] == 'GetDetail' and 'Article' in any_data_row[ActionParameters_enum]:
+            if any_data_row[ActionType_enum] == 'GetDetail' and 'Article' in any_data_row[ActionParameters_enum] and articles_info[any_data_row[ActionParameters_enum]]['RelevantToTask'] == 'yes':
                 first_relevant_article_encounter_time = any_data_row[Time_enum]
                 first_relevant_article_encounter_time_object = datetime.strptime(first_relevant_article_encounter_time, '%IH %MM %SS')
                 first_any_data_encounter_time = cur['raw_any_data_list'][0][Time_enum]
                 first_any_data_encounter_time_object = datetime.strptime(first_any_data_encounter_time, '%IH %MM %SS')
-                
+                diff = first_relevant_article_encounter_time_object - first_any_data_encounter_time_object
+                print(first_any_data_encounter_time_object, first_relevant_article_encounter_time_object, diff, diff.total_seconds())
+                cur['how_long_it_takes_to_read_first_relevant_article'] = diff.total_seconds()
                 break
 
     if len(cur['raw_data_list']) == 0:
@@ -165,11 +160,11 @@ for key, value in result.items():
         else:
             cur['avg_revisitation_rate_irrelevant_articles'] = 'NA' # finish cur['avg_revisitation_rate_irrelevant_articles']
 
-# for key, value in result.items():
-#     print(key)
-#     for k, v in value.items():
-#         if k != 'raw_data_list' and k != 'raw_any_data_list':
-#             print(k,v)
+for key, value in result.items():
+    print(key)
+    for k, v in value.items():
+        if k != 'raw_data_list' and k != 'raw_any_data_list':
+            print(k,v)
 
 
 
