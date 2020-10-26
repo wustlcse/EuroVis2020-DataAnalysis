@@ -1,5 +1,6 @@
 import csv, pprint
 from collections import OrderedDict
+from datetime import datetime
 Serial_enum = 0
 Participant_enum = 1
 ActionType_enum = 2
@@ -25,8 +26,16 @@ with open('data/eventlog.csv', 'r') as file:
         if current_participant != previous_participant:
             result[current_participant] = {}
             result[current_participant]['raw_data_list'] = []
-        elif row[ActionType_enum] == 'GetDetail' and 'Article' in row[ActionParameters_enum]:
-            result[current_participant]['raw_data_list'].append(row)
+            result[current_participant]['raw_any_data_list'] = []
+
+            result[current_participant]['raw_any_data_list'].append(row)
+            if row[ActionType_enum] == 'GetDetail' and 'Article' in row[ActionParameters_enum]:
+                result[current_participant]['raw_data_list'].append(row)
+        else:
+            result[current_participant]['raw_any_data_list'].append(row)
+            if row[ActionType_enum] == 'GetDetail' and 'Article' in row[ActionParameters_enum]:
+                result[current_participant]['raw_data_list'].append(row)
+
         previous_participant = current_participant
 
 with open('data/article_info.csv', 'r') as file:
@@ -63,10 +72,38 @@ for key, value in result.items():
     cur['relevant_article_read_count_in_path'] = 0
     cur['irrelevant_article_read_count_in_path'] = 0
 
+    cur['avg_revisitation_rate_total_articles'] = 0
+    cur['avg_revisitation_rate_relevant_articles'] = 0
+    cur['avg_revisitation_rate_irrelevant_articles'] = 0
+
+    datetime_object = datetime.strptime('1:33PM', '%I:%M%p')
+    print(datetime_object)
+
+    datetime_object = datetime.strptime('10H 30M 34S', '%IH %MM %SS')
+    print(datetime_object)
+
+    print("------")
+    if len(cur['raw_any_data_list']) == 0:
+        cur['how_long_it_takes_to_read_first_relevant_article'] = 'NA'
+    else:
+        for any_data_row in cur['raw_any_data_list']:
+            print(any_data_row)
+            if any_data_row[ActionType_enum] == 'GetDetail' and 'Article' in any_data_row[ActionParameters_enum]:
+                first_relevant_article_encounter_time = any_data_row[Time_enum]
+                first_relevant_article_encounter_time_object = datetime.strptime(first_relevant_article_encounter_time, '%IH %MM %SS')
+                first_any_data_encounter_time = cur['raw_any_data_list'][0][Time_enum]
+                first_any_data_encounter_time_object = datetime.strptime(first_any_data_encounter_time, '%IH %MM %SS')
+                
+                break
+
     if len(cur['raw_data_list']) == 0:
-        cur['avg_time_per_article'] = 'NA' # finish cur['avg_time_per_article']
-        cur['avg_time_per_relevant_article'] = 'NA' # finish cur['avg_time_per_relevant_article']
-        cur['avg_time_per_irrelevant_article'] = 'NA' # finish cur['avg_time_per_irrelevant_article']
+        cur['avg_time_per_article'] = 'NA'
+        cur['avg_time_per_relevant_article'] = 'NA'
+        cur['avg_time_per_irrelevant_article'] = 'NA'
+
+        cur['avg_revisitation_rate_total_articles'] = 'NA'
+        cur['avg_revisitation_rate_relevant_articles'] = 'NA'
+        cur['avg_revisitation_rate_irrelevant_articles'] = 'NA'
     else:
         for r in cur['raw_data_list']:
             dur = r[duration_enum]
@@ -102,18 +139,37 @@ for key, value in result.items():
         if cur['relevant_article_read_count_in_path'] != 0:
             cur['avg_time_per_relevant_article'] = cur['relevant_article_duration']/cur['relevant_article_read_count_in_path'] # finish cur['avg_time_per_relevant_article']
         else:
-            cur['avg_time_per_relevant_article'] = 0
+            cur['avg_time_per_relevant_article'] = 'NA'
 
         if cur['irrelevant_article_read_count_in_path'] != 0:
             cur['avg_time_per_irrelevant_article'] = cur['irrelevant_article_duration']/cur['irrelevant_article_read_count_in_path'] # finish cur['avg_time_per_irrelevant_article']
         else:
-            cur['avg_time_per_irrelevant_article'] = 0
+            cur['avg_time_per_irrelevant_article'] = 'NA'
 
-for key, value in result.items():
-    print(key)
-    for k, v in value.items():
-        if k != 'raw_data_list':
-            print(k,v)
+        for article_name, article_name_count in cur['article_stats'].items():
+            cur['avg_revisitation_rate_total_articles'] += article_name_count
+            if articles_info[article_name]['RelevantToTask'] == 'yes':
+                cur['avg_revisitation_rate_relevant_articles'] += article_name_count
+            else:
+                cur['avg_revisitation_rate_irrelevant_articles'] += article_name_count
+
+        cur['avg_revisitation_rate_total_articles'] /= cur['total_unique_article_read_count'] # finish cur['avg_revisitation_rate_total_articles']
+
+        if cur['relevant_unique_article_read_count'] != 0:
+            cur['avg_revisitation_rate_relevant_articles'] /= cur['relevant_unique_article_read_count'] # finish cur['avg_revisitation_rate_relevant_articles']
+        else:
+            cur['avg_revisitation_rate_relevant_articles'] = 'NA' # finish cur['avg_revisitation_rate_relevant_articles']
+
+        if cur['irrelevant_unique_article_read_count'] != 0:
+            cur['avg_revisitation_rate_irrelevant_articles'] /= cur['irrelevant_unique_article_read_count']  # finish cur['avg_revisitation_rate_irrelevant_articles']
+        else:
+            cur['avg_revisitation_rate_irrelevant_articles'] = 'NA' # finish cur['avg_revisitation_rate_irrelevant_articles']
+
+# for key, value in result.items():
+#     print(key)
+#     for k, v in value.items():
+#         if k != 'raw_data_list' and k != 'raw_any_data_list':
+#             print(k,v)
 
 
 
