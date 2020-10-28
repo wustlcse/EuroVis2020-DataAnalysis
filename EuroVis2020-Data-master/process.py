@@ -1,4 +1,4 @@
-import csv, pprint
+import csv, pprint, statistics
 from collections import OrderedDict
 from datetime import datetime
 Serial_enum = 0
@@ -75,21 +75,53 @@ for key, value in result.items():
     cur['avg_revisitation_rate_total_articles'] = 0
     cur['avg_revisitation_rate_relevant_articles'] = 0
     cur['avg_revisitation_rate_irrelevant_articles'] = 0
-    print("------")
+
+    cur['avg_time_gap_between_relevant_articles'] = 'NA'
+
+    # print(key,"------")
+
     if len(cur['raw_any_data_list']) == 0:
         cur['how_long_it_takes_to_read_first_relevant_article'] = 'NA'
+        cur['avg_time_gap_between_relevant_articles'] = 'NA'
     else:
         for any_data_row in cur['raw_any_data_list']:
-            print(any_data_row)
             if any_data_row[ActionType_enum] == 'GetDetail' and 'Article' in any_data_row[ActionParameters_enum] and articles_info[any_data_row[ActionParameters_enum]]['RelevantToTask'] == 'yes':
                 first_relevant_article_encounter_time = any_data_row[Time_enum]
-                first_relevant_article_encounter_time_object = datetime.strptime(first_relevant_article_encounter_time, '%IH %MM %SS')
+                first_relevant_article_encounter_time_object = datetime.strptime(first_relevant_article_encounter_time, '%HH %MM %SS')
                 first_any_data_encounter_time = cur['raw_any_data_list'][0][Time_enum]
-                first_any_data_encounter_time_object = datetime.strptime(first_any_data_encounter_time, '%IH %MM %SS')
+                first_any_data_encounter_time_object = datetime.strptime(first_any_data_encounter_time, '%HH %MM %SS')
                 diff = first_relevant_article_encounter_time_object - first_any_data_encounter_time_object
                 print(first_any_data_encounter_time_object, first_relevant_article_encounter_time_object, diff, diff.total_seconds())
-                cur['how_long_it_takes_to_read_first_relevant_article'] = diff.total_seconds()
+                cur['how_long_it_takes_to_read_first_relevant_article'] = diff.total_seconds() # finish cur['avg_time_gap_between_relevant_articles']
                 break
+
+        relevant_article_time_gaps_list = []
+
+        actions_by_day_dict = {}
+        for any_data_row in cur['raw_any_data_list']:
+            temp_day = any_data_row[Day_enum]
+            if temp_day in actions_by_day_dict:
+                if any_data_row[ActionType_enum] == 'GetDetail' and 'Article' in any_data_row[ActionParameters_enum] and articles_info[any_data_row[ActionParameters_enum]]['RelevantToTask'] == 'yes':
+                    current_relevant_article_encounter_time = any_data_row[Time_enum]
+                    current_relevant_article_encounter_time_object = datetime.strptime(current_relevant_article_encounter_time, '%HH %MM %SS')
+                    actions_by_day_dict[temp_day]['relevant_article_time_dots_list'].append(current_relevant_article_encounter_time_object)
+            else:
+                actions_by_day_dict[temp_day] = {}
+                actions_by_day_dict[temp_day]['relevant_article_time_dots_list'] = []
+                actions_by_day_dict[temp_day]['relevant_article_time_gaps_list'] = []
+                if any_data_row[ActionType_enum] == 'GetDetail' and 'Article' in any_data_row[ActionParameters_enum] and articles_info[any_data_row[ActionParameters_enum]]['RelevantToTask'] == 'yes':
+                    current_relevant_article_encounter_time = any_data_row[Time_enum]
+                    current_relevant_article_encounter_time_object = datetime.strptime(current_relevant_article_encounter_time, '%HH %MM %SS')
+                    actions_by_day_dict[temp_day]['relevant_article_time_dots_list'].append(current_relevant_article_encounter_time_object)
+
+        for day,daily_dict in actions_by_day_dict.items():
+            for i in range(len(daily_dict['relevant_article_time_dots_list'])-1):
+                temp_gap = (daily_dict['relevant_article_time_dots_list'][i+1] - daily_dict['relevant_article_time_dots_list'][i]).total_seconds()
+                daily_dict['relevant_article_time_gaps_list'].append(temp_gap)
+                relevant_article_time_gaps_list.append(temp_gap)
+
+        if len(relevant_article_time_gaps_list) != 0:
+            cur['avg_time_gap_between_relevant_articles'] = statistics.mean(relevant_article_time_gaps_list) # finish cur['avg_time_gap_between_relevant_articles']
 
     if len(cur['raw_data_list']) == 0:
         cur['avg_time_per_article'] = 'NA'
@@ -99,6 +131,8 @@ for key, value in result.items():
         cur['avg_revisitation_rate_total_articles'] = 'NA'
         cur['avg_revisitation_rate_relevant_articles'] = 'NA'
         cur['avg_revisitation_rate_irrelevant_articles'] = 'NA'
+
+        cur['avg_time_gap_between_relevant_articles'] = 'NA'
     else:
         for r in cur['raw_data_list']:
             dur = r[duration_enum]
@@ -165,6 +199,8 @@ for key, value in result.items():
     for k, v in value.items():
         if k != 'raw_data_list' and k != 'raw_any_data_list':
             print(k,v)
+
+            
 
 
 
