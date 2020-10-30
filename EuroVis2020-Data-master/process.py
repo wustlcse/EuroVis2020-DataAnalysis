@@ -1,6 +1,13 @@
 import csv, pprint, statistics
 from collections import OrderedDict
 from datetime import datetime
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from sklearn import datasets, linear_model
+from sklearn.metrics import mean_squared_error, r2_score
+import seaborn as sns
+
 Serial_enum = 0
 Participant_enum = 1
 ActionType_enum = 2
@@ -14,6 +21,8 @@ duration_enum = 8
 
 result = OrderedDict() # stores the data collection results
 articles_info = OrderedDict() # stores article information
+participants_info = OrderedDict() # stores participant info
+
 with open('data/eventlog.csv', 'r') as file:
     reader = csv.reader(file)
     next(reader)
@@ -24,7 +33,7 @@ with open('data/eventlog.csv', 'r') as file:
         current_participant = row[Participant_enum]
         participants.add(current_participant)
         if current_participant != previous_participant:
-            result[current_participant] = {}
+            result[current_participant] = OrderedDict()
             result[current_participant]['raw_data_list'] = []
             result[current_participant]['raw_any_data_list'] = []
 
@@ -46,6 +55,14 @@ with open('data/article_info.csv', 'r') as file:
         articles_info['Article ' + current_article_num] = {}
         articles_info['Article ' + current_article_num]['RelevantToTask'] = row[1]
         articles_info['Article ' + current_article_num]['Original'] = row[2]
+
+with open('data/survey.csv', 'r') as file:
+    reader_participants_info = csv.reader(file)
+    next(reader_participants_info)
+    for row in reader_participants_info:
+        current_participant_id = row[8]
+        participants_info[current_participant_id] = {}
+        participants_info[current_participant_id]['LOC'] = row[len(row)-1]
 
 for key, value in result.items():
     cur = result[key] # key --> Participant code; cur --> each participant's individual info dict
@@ -77,6 +94,10 @@ for key, value in result.items():
     cur['avg_revisitation_rate_irrelevant_articles'] = 0
 
     cur['avg_time_gap_between_relevant_articles'] = 'NA'
+
+    cur['LOC'] = 'NA'
+    if key in participants_info:
+        cur['LOC'] = participants_info[key]['LOC']
 
     # print(key,"------")
 
@@ -194,13 +215,59 @@ for key, value in result.items():
         else:
             cur['avg_revisitation_rate_irrelevant_articles'] = 'NA' # finish cur['avg_revisitation_rate_irrelevant_articles']
 
+no_NA_result_dict = {}
+NA_flag = 0
 for key, value in result.items():
-    print(key)
+    # print(key)
     for k, v in value.items():
-        if k != 'raw_data_list' and k != 'raw_any_data_list':
-            print(k,v)
+        # if k != 'raw_data_list' and k != 'raw_any_data_list':
+        #     print(k,v)
+        if v == 'NA':
+            NA_flag = 1
+    if NA_flag == 0:
+        no_NA_result_dict[key] = value
+    NA_flag = 0
 
-            
+print(len(no_NA_result_dict))
+df_formatted_dict = {}
+df_formatted_dict['names'] = []
+df_columns=[]
+df_columns.append('names')
+for key, value in no_NA_result_dict.items():
+    #print(key,'\n')
+    df_formatted_dict['names'].append(key)
+    for k, v in value.items():
+        if k != 'raw_data_list' and k != 'raw_any_data_list' and k != 'article_stats':
+            #print(k,v)
+            if k in df_formatted_dict:
+                df_formatted_dict[k].append(v)
+            else:
+                df_formatted_dict[k] = []
+                df_columns.append(k)
+                df_formatted_dict[k].append(v)
+
+print(df_formatted_dict)
+print(df_columns)
+# raw_data = {'first_name': ['Jason', 'Molly', 'Tina', 'Jake', 'Amy'],
+#         'last_name': ['Miller', 'Jacobson', ".", 'Milner', 'Cooze'],
+#         'age': [42, 52, 36, 24, 73],
+#         'preTestScore': [4, 24, 31, ".", "."],
+#         'postTestScore': ["25,000", "94,000", 57, 62, 70]}
+# df = pd.DataFrame(raw_data, columns = ['first_name', 'last_name', 'age', 'preTestScore', 'postTestScore'])
+df = pd.DataFrame(df_formatted_dict, columns = df_columns)
+
+sns.set_theme(style="ticks")
+sns.pairplot(df, hue="LOC")
+
+print(participants_info)
+#plt.show()
+
+
+
+
+
+
+
 
 
 
