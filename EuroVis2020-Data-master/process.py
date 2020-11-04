@@ -7,6 +7,12 @@ import pandas as pd
 from sklearn import datasets, linear_model
 from sklearn.metrics import mean_squared_error, r2_score
 import seaborn as sns
+import chart_studio.plotly as py
+import plotly.figure_factory as ff
+import chart_studio
+import plotly.graph_objects as go
+chart_studio.tools.set_credentials_file(username='ZLLIU', api_key='6LoZSiPvYPEmQgTSugzh')
+
 
 Serial_enum = 0
 Participant_enum = 1
@@ -68,7 +74,6 @@ for key, value in result.items():
     cur = result[key] # key --> Participant code; cur --> each participant's individual info dict
 
     # stats collected and default values
-
     cur['total_article_duration'] = 0
     cur['relevant_article_duration'] = 0
     cur['irrelevant_article_duration'] = 0
@@ -94,10 +99,6 @@ for key, value in result.items():
     cur['avg_revisitation_rate_irrelevant_articles'] = 0
 
     cur['avg_time_gap_between_relevant_articles'] = 'NA'
-
-    cur['LOC'] = 'NA'
-    if key in participants_info:
-        cur['LOC'] = participants_info[key]['LOC']
 
     # print(key,"------")
 
@@ -214,6 +215,9 @@ for key, value in result.items():
             cur['avg_revisitation_rate_irrelevant_articles'] /= cur['irrelevant_unique_article_read_count']  # finish cur['avg_revisitation_rate_irrelevant_articles']
         else:
             cur['avg_revisitation_rate_irrelevant_articles'] = 'NA' # finish cur['avg_revisitation_rate_irrelevant_articles']
+    cur['LOC'] = 'NA'
+    if key in participants_info:
+        cur['LOC'] = participants_info[key]['LOC']
 
 no_NA_result_dict = {}
 NA_flag = 0
@@ -246,6 +250,9 @@ for key, value in no_NA_result_dict.items():
                 df_columns.append(k)
                 df_formatted_dict[k].append(v)
 
+
+
+
 print(df_formatted_dict)
 print(df_columns)
 # raw_data = {'first_name': ['Jason', 'Molly', 'Tina', 'Jake', 'Amy'],
@@ -255,11 +262,30 @@ print(df_columns)
 #         'postTestScore': ["25,000", "94,000", 57, 62, 70]}
 # df = pd.DataFrame(raw_data, columns = ['first_name', 'last_name', 'age', 'preTestScore', 'postTestScore'])
 df = pd.DataFrame(df_formatted_dict, columns = df_columns)
+small_df = df[df.columns[-5:]]
+print(df)
+print(small_df)
+y_target = df[df.columns[-1]]
 
-sns.set_theme(style="ticks")
-sns.pairplot(df, hue="LOC")
+fig = ff.create_scatterplotmatrix(small_df, diag='box', index='LOC',
+                                  height=1000, width=1000)
+py.iplot(fig, filename='Box plots along Diagonal Subplots')
 
-print(participants_info)
+pd.set_option('display.max_columns', None)
+
+print(df.groupby('LOC', as_index=False).mean())
+
+html = df.groupby('LOC', as_index=False).mean().to_html()
+
+#write html to file
+text_file = open("ind.html", "w")
+text_file.write(html)
+text_file.close()
+
+
+# sns.set_theme(style="ticks")
+# sns.pairplot(small_df,hue="LOC")
+# grr = pd.plotting.scatter_matrix(small_df, c=Y,alpha=.8)
 #plt.show()
 
 
