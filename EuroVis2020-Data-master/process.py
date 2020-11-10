@@ -29,6 +29,7 @@ result = OrderedDict() # stores the data collection results
 articles_info = OrderedDict() # stores article information
 participants_info = OrderedDict() # stores participant info
 
+
 with open('data/eventlog.csv', 'r') as file:
     reader = csv.reader(file)
     next(reader)
@@ -113,7 +114,6 @@ for key, value in result.items():
                 first_any_data_encounter_time = cur['raw_any_data_list'][0][Time_enum]
                 first_any_data_encounter_time_object = datetime.strptime(first_any_data_encounter_time, '%HH %MM %SS')
                 diff = first_relevant_article_encounter_time_object - first_any_data_encounter_time_object
-                print(first_any_data_encounter_time_object, first_relevant_article_encounter_time_object, diff, diff.total_seconds())
                 cur['how_long_it_takes_to_read_first_relevant_article'] = diff.total_seconds() # finish cur['avg_time_gap_between_relevant_articles']
                 break
 
@@ -144,6 +144,40 @@ for key, value in result.items():
 
         if len(relevant_article_time_gaps_list) != 0:
             cur['avg_time_gap_between_relevant_articles'] = statistics.mean(relevant_article_time_gaps_list) # finish cur['avg_time_gap_between_relevant_articles']
+
+        articles_actions_info = OrderedDict()  # stores actions that follow each article read
+        current_article_block = ''
+        previous_article_block = ''
+        current_article_block_temp_name = ''
+        previous_article_block_temp_name = ''
+        articles_actions_info['article_counts'] = OrderedDict()
+        articles_actions_info['article_actions'] = OrderedDict()
+        for any_data_row in cur['raw_any_data_list']:
+            if any_data_row[ActionType_enum] == 'GetDetail' and 'Article' in any_data_row[ActionParameters_enum]:
+                current_article_block = any_data_row[ActionParameters_enum]
+                print(current_article_block, any_data_row)
+                if current_article_block in articles_actions_info['article_counts']:
+                    articles_actions_info['article_counts'][current_article_block] += 1
+                else:
+                    if len(current_article_block) != 0:
+                        articles_actions_info['article_counts'][current_article_block] = 1
+
+            if len(current_article_block) != 0:
+                temp_name = current_article_block + '_' + str(articles_actions_info['article_counts'][current_article_block])
+                current_article_block_temp_name = temp_name
+                if current_article_block != previous_article_block or current_article_block_temp_name != previous_article_block_temp_name:
+                    print(temp_name + " is created")
+                    articles_actions_info['article_actions'][temp_name] = []
+                    articles_actions_info['article_actions'][temp_name].append(any_data_row)
+                else:
+                    articles_actions_info['article_actions'][temp_name].append(any_data_row)
+            previous_article_block = current_article_block
+            previous_article_block_temp_name = current_article_block_temp_name
+        cur['articles_actions_info_dict'] = articles_actions_info
+        pprint.pprint(cur['articles_actions_info_dict'])
+
+
+
 
     if len(cur['raw_data_list']) == 0:
         cur['avg_time_per_article'] = 'NA'
@@ -215,6 +249,8 @@ for key, value in result.items():
             cur['avg_revisitation_rate_irrelevant_articles'] /= cur['irrelevant_unique_article_read_count']  # finish cur['avg_revisitation_rate_irrelevant_articles']
         else:
             cur['avg_revisitation_rate_irrelevant_articles'] = 'NA' # finish cur['avg_revisitation_rate_irrelevant_articles']
+
+
     cur['LOC'] = 'NA'
     if key in participants_info:
         cur['LOC'] = participants_info[key]['LOC']
@@ -232,7 +268,7 @@ for key, value in result.items():
         no_NA_result_dict[key] = value
     NA_flag = 0
 
-print(len(no_NA_result_dict))
+# print(len(no_NA_result_dict))
 df_formatted_dict = {}
 df_formatted_dict['names'] = []
 df_columns=[]
@@ -241,7 +277,7 @@ for key, value in no_NA_result_dict.items():
     #print(key,'\n')
     df_formatted_dict['names'].append(key)
     for k, v in value.items():
-        if k != 'raw_data_list' and k != 'raw_any_data_list' and k != 'article_stats':
+        if k != 'raw_data_list' and k != 'raw_any_data_list' and k != 'article_stats' and k != 'articles_actions_info_dict':
             #print(k,v)
             if k in df_formatted_dict:
                 df_formatted_dict[k].append(v)
@@ -253,8 +289,8 @@ for key, value in no_NA_result_dict.items():
 
 
 
-print(df_formatted_dict)
-print(df_columns)
+# print(df_formatted_dict)
+# print(df_columns)
 # raw_data = {'first_name': ['Jason', 'Molly', 'Tina', 'Jake', 'Amy'],
 #         'last_name': ['Miller', 'Jacobson', ".", 'Milner', 'Cooze'],
 #         'age': [42, 52, 36, 24, 73],
@@ -263,24 +299,25 @@ print(df_columns)
 # df = pd.DataFrame(raw_data, columns = ['first_name', 'last_name', 'age', 'preTestScore', 'postTestScore'])
 df = pd.DataFrame(df_formatted_dict, columns = df_columns)
 small_df = df[df.columns[-5:]]
-print(df)
-print(small_df)
-y_target = df[df.columns[-1]]
+# print(df)
+# print(small_df)
+# y_target = df[df.columns[-1]]
+#
+# fig = ff.create_scatterplotmatrix(small_df, diag='box', index='LOC',
+#                                   height=1000, width=1000)
+# py.iplot(fig, filename='Box plots along Diagonal Subplots')
+#
+# pd.set_option('display.max_columns', None)
 
-fig = ff.create_scatterplotmatrix(small_df, diag='box', index='LOC',
-                                  height=1000, width=1000)
-py.iplot(fig, filename='Box plots along Diagonal Subplots')
 
-pd.set_option('display.max_columns', None)
-
-print(df.groupby('LOC', as_index=False).mean())
-
-html = df.groupby('LOC', as_index=False).mean().to_html()
-
-#write html to file
-text_file = open("ind.html", "w")
-text_file.write(html)
-text_file.close()
+# print(df.groupby('LOC', as_index=False).mean())
+#
+# html = df.groupby('LOC', as_index=False).mean().to_html()
+#
+# #write html to file
+# text_file = open("ind2.html", "w")
+# text_file.write(html)
+# text_file.close()
 
 
 # sns.set_theme(style="ticks")
