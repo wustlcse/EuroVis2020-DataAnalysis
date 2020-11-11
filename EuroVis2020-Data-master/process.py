@@ -24,6 +24,9 @@ Group_enum = 6
 Day_enum = 7
 duration_enum = 8
 
+keywords_list = ['Henk','Brodogi','Carmine','Osvaldo','Yanick','Cato','Loreto','Katell','Ale','Loreto','Hanne',
+                 'Jeroen','Karel','Valentine','Mies','Elian','Silvia','Karel']
+
 
 result = OrderedDict() # stores the data collection results
 articles_info = OrderedDict() # stores article information
@@ -95,6 +98,10 @@ for key, value in result.items():
     cur['relevant_article_read_count_in_path'] = 0
     cur['irrelevant_article_read_count_in_path'] = 0
 
+    cur['total_resume_read_count_in_path'] = 0
+    cur['total_employeerecord_read_count_in_path'] = 0
+    cur['total_emailheaders_read_count_in_path'] = 0
+
     cur['avg_revisitation_rate_total_articles'] = 0
     cur['avg_revisitation_rate_relevant_articles'] = 0
     cur['avg_revisitation_rate_irrelevant_articles'] = 0
@@ -152,10 +159,59 @@ for key, value in result.items():
         previous_article_block_temp_name = ''
         articles_actions_info['article_counts'] = OrderedDict()
         articles_actions_info['article_actions'] = OrderedDict()
+
+        cur['total_editnotes_count'] = 0
+        cur['total_search_count'] = 0
+        cur['total_getdetail_nonarticle_count'] = 0
+        cur['total_addelement_count'] = 0
+        cur['total_addconnection_count'] = 0
+
+        cur['avg_editnotes_count_per_article'] = 'NA'
+        cur['avg_search_count_per_article'] = 'NA'
+        cur['avg_getdetail_nonarticle_count_per_article'] = 'NA'
+        cur['avg_addelement_count_per_article'] = 'NA'
+        # cur['avg_total_addconnection_count_per_article'] = 'NA'
+        #
+        # cur['avg_editnotes_count_per_relevant_article'] = 'NA'
+        # cur['avg_search_count_per_relevant_article'] = 'NA'
+        # cur['avg_total_getdetail_nonarticle_count_per_relevant_article'] = 'NA'
+        # cur['avg_total_addelement_count_per_relevant_article'] = 'NA'
+        # cur['avg_total_addconnection_count_per_relevant_article'] = 'NA'
+        #
+        # cur['avg_editnotes_count_per_irrelevant_article'] = 'NA'
+        # cur['avg_search_count_per_irrelevant_article'] = 'NA'
+        # cur['avg_total_getdetail_nonarticle_count_per_irrelevant_article'] = 'NA'
+        # cur['avg_total_addelement_count_per_irrelevant_article'] = 'NA'
+        # cur['avg_total_addconnection_count_per_irrelevant_article'] = 'NA'
+
         for any_data_row in cur['raw_any_data_list']:
+            if any_data_row[ActionType_enum] == 'GetDetail' and 'Article' not in any_data_row[ActionParameters_enum]:
+                cur['total_getdetail_nonarticle_count'] += 1
+
+            if any_data_row[ActionType_enum] == 'EditNotes':
+                cur['total_editnotes_count'] += 1
+
+            if any_data_row[ActionType_enum] == 'Search':
+                cur['total_search_count'] += 1
+
+            if any_data_row[ActionType_enum] == 'AddElement':
+                cur['total_addelement_count'] += 1
+
+            if any_data_row[ActionType_enum] == 'AddConnection':
+                cur['total_addconnection_count'] += 1
+
+            if any_data_row[ActionType_enum] == 'GetDetail' and 'Resume' in any_data_row[ActionParameters_enum]:
+                cur['total_resume_read_count_in_path'] += 1 # finish cur['total_resume_read_count_in_path']
+
+            if any_data_row[ActionType_enum] == 'GetDetail' and 'Record' in any_data_row[ActionParameters_enum]:
+                cur['total_employeerecord_read_count_in_path'] += 1 # finish cur['total_employeerecord_read_count_in_path']
+
+            if any_data_row[ActionType_enum] == 'GetDetail' and 'Header' in any_data_row[ActionParameters_enum]:
+                cur['total_emailheaders_read_count_in_path'] += 1 # finish cur['total_emailheaders_read_count_in_path']
+
             if any_data_row[ActionType_enum] == 'GetDetail' and 'Article' in any_data_row[ActionParameters_enum]:
                 current_article_block = any_data_row[ActionParameters_enum]
-                print(current_article_block, any_data_row)
+                # print(current_article_block, any_data_row)
                 if current_article_block in articles_actions_info['article_counts']:
                     articles_actions_info['article_counts'][current_article_block] += 1
                 else:
@@ -166,7 +222,7 @@ for key, value in result.items():
                 temp_name = current_article_block + '_' + str(articles_actions_info['article_counts'][current_article_block])
                 current_article_block_temp_name = temp_name
                 if current_article_block != previous_article_block or current_article_block_temp_name != previous_article_block_temp_name:
-                    print(temp_name + " is created")
+                    # print(temp_name + " is created")
                     articles_actions_info['article_actions'][temp_name] = []
                     articles_actions_info['article_actions'][temp_name].append(any_data_row)
                 else:
@@ -174,7 +230,8 @@ for key, value in result.items():
             previous_article_block = current_article_block
             previous_article_block_temp_name = current_article_block_temp_name
         cur['articles_actions_info_dict'] = articles_actions_info
-        pprint.pprint(cur['articles_actions_info_dict'])
+
+
 
 
 
@@ -219,6 +276,11 @@ for key, value in result.items():
 
         cur['avg_time_per_article'] = cur['total_article_duration']/len(cur['raw_data_list']) # finish cur['avg_time_per_article']
 
+        cur['avg_editnotes_count_per_article'] = cur['total_editnotes_count'] / len(cur['raw_data_list'])
+        cur['avg_search_count_per_article'] = cur['total_search_count'] / len(cur['raw_data_list'])
+        cur['avg_getdetail_nonarticle_count_per_article'] = cur['total_getdetail_nonarticle_count'] / len(cur['raw_data_list'])
+        cur['avg_addelement_count_per_article'] = cur['total_addelement_count'] / len(cur['raw_data_list'])
+
         cur['total_unique_article_read_count'] = len(cur['article_stats']) # finish cur['total_unique_article_read_count']
 
         if cur['relevant_article_read_count_in_path'] != 0:
@@ -249,7 +311,6 @@ for key, value in result.items():
             cur['avg_revisitation_rate_irrelevant_articles'] /= cur['irrelevant_unique_article_read_count']  # finish cur['avg_revisitation_rate_irrelevant_articles']
         else:
             cur['avg_revisitation_rate_irrelevant_articles'] = 'NA' # finish cur['avg_revisitation_rate_irrelevant_articles']
-
 
     cur['LOC'] = 'NA'
     if key in participants_info:
@@ -312,17 +373,13 @@ small_df = df[df.columns[-5:]]
 
 # print(df.groupby('LOC', as_index=False).mean())
 #
-# html = df.groupby('LOC', as_index=False).mean().to_html()
-#
-# #write html to file
-# text_file = open("ind2.html", "w")
-# text_file.write(html)
-# text_file.close()
+html = df.groupby('LOC', as_index=False).mean().to_html(classes='table table-striped')
 
+#write html to file
+text_file = open("ind2.html", "w")
+text_file.write(html)
+text_file.close()
 
-# sns.set_theme(style="ticks")
-# sns.pairplot(small_df,hue="LOC")
-# grr = pd.plotting.scatter_matrix(small_df, c=Y,alpha=.8)
 #plt.show()
 
 
