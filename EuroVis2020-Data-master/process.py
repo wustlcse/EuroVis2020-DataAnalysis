@@ -25,7 +25,7 @@ Day_enum = 7
 duration_enum = 8
 
 keywords_list = ['Henk','Brodogi','Carmine','Osvaldo','Yanick','Cato','Loreto','Katell','Ale','Loreto','Hanne',
-                 'Jeroen','Karel','Valentine','Mies','Elian','Silvia','Karel']
+                 'Jeroen','Karel','Valentine','Mies','Elian','Silvia','Marek','Vann','Ferro','Rocha','Stefano']
 
 
 result = OrderedDict() # stores the data collection results
@@ -166,6 +166,11 @@ for key, value in result.items():
         cur['total_addelement_count'] = 0
         cur['total_addconnection_count'] = 0
 
+        cur['total_relevant_editnotes_count'] = 0
+        cur['total_relevant_search_count'] = 0
+        cur['total_relevant_addelement_count'] = 0
+        cur['total_relevant_addconnection_count'] = 0
+
         cur['avg_editnotes_count_per_article'] = 'NA'
         cur['avg_search_count_per_article'] = 'NA'
         cur['avg_getdetail_nonarticle_count_per_article'] = 'NA'
@@ -193,12 +198,18 @@ for key, value in result.items():
 
             if any_data_row[ActionType_enum] == 'Search':
                 cur['total_search_count'] += 1
+                if any(ext in any_data_row[ActionParameters_enum] for ext in keywords_list):
+                    cur['total_relevant_search_count'] += 1
 
             if any_data_row[ActionType_enum] == 'AddElement':
                 cur['total_addelement_count'] += 1
+                if any(ext in any_data_row[ActionParameters_enum] for ext in keywords_list):
+                    cur['total_relevant_addelement_count'] += 1
 
             if any_data_row[ActionType_enum] == 'AddConnection':
                 cur['total_addconnection_count'] += 1
+                if any(ext in any_data_row[ActionParameters_enum] for ext in keywords_list):
+                    cur['total_relevant_addconnection_count'] += 1
 
             if any_data_row[ActionType_enum] == 'GetDetail' and 'Resume' in any_data_row[ActionParameters_enum]:
                 cur['total_resume_read_count_in_path'] += 1 # finish cur['total_resume_read_count_in_path']
