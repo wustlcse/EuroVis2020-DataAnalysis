@@ -1,4 +1,4 @@
-import csv, pprint, statistics
+import csv, pprint, statistics,collections
 from collections import OrderedDict
 from datetime import datetime
 import matplotlib.pyplot as plt
@@ -11,6 +11,10 @@ import chart_studio.plotly as py
 import plotly.figure_factory as ff
 import chart_studio
 import plotly.graph_objects as go
+import plotly.express as px
+import plotly.io as pio
+import statsmodels.api as sm
+pio.renderers.default = "browser"
 chart_studio.tools.set_credentials_file(username='ZLLIU', api_key='6LoZSiPvYPEmQgTSugzh')
 
 
@@ -66,13 +70,18 @@ with open('data/article_info.csv', 'r') as file:
         articles_info['Article ' + current_article_num]['RelevantToTask'] = row[1]
         articles_info['Article ' + current_article_num]['Original'] = row[2]
 
+names_in_survey_csv_set = set()
 with open('data/survey.csv', 'r') as file:
     reader_participants_info = csv.reader(file)
     next(reader_participants_info)
     for row in reader_participants_info:
         current_participant_id = row[8]
+        names_in_survey_csv_set.add(current_participant_id)
         participants_info[current_participant_id] = {}
         participants_info[current_participant_id]['LOC'] = row[len(row)-1]
+        participants_info[current_participant_id]['LOC-score'] = int(row[len(row)-2])
+        participants_info[current_participant_id]['Extraversion-score'] = int(row[153])
+
 
 for key, value in result.items():
     cur = result[key] # key --> Participant code; cur --> each participant's individual info dict
@@ -168,6 +177,7 @@ for key, value in result.items():
 
         cur['total_relevant_editnotes_count'] = 0
         cur['total_relevant_search_count'] = 0
+        cur['total_relevant_getdetail_nonarticle_count'] = 0
         cur['total_relevant_addelement_count'] = 0
         cur['total_relevant_addconnection_count'] = 0
 
@@ -192,6 +202,8 @@ for key, value in result.items():
         for any_data_row in cur['raw_any_data_list']:
             if any_data_row[ActionType_enum] == 'GetDetail' and 'Article' not in any_data_row[ActionParameters_enum]:
                 cur['total_getdetail_nonarticle_count'] += 1
+                if any(ext in any_data_row[ActionParameters_enum] for ext in keywords_list):
+                    cur['total_relevant_getdetail_nonarticle_count'] += 1
 
             if any_data_row[ActionType_enum] == 'EditNotes':
                 cur['total_editnotes_count'] += 1
@@ -241,6 +253,15 @@ for key, value in result.items():
             previous_article_block = current_article_block
             previous_article_block_temp_name = current_article_block_temp_name
         cur['articles_actions_info_dict'] = articles_actions_info
+
+        cur['percentage_editnotes_count'] = cur['total_editnotes_count'] / (cur['total_editnotes_count'] + cur['total_search_count'] + cur['total_getdetail_nonarticle_count'] + cur['total_addelement_count'] + cur['total_addconnection_count'])
+        cur['percentage_search_count'] = cur['total_search_count'] / (cur['total_editnotes_count'] + cur['total_search_count'] + cur['total_getdetail_nonarticle_count'] + cur['total_addelement_count'] + cur['total_addconnection_count'])
+        cur['percentage_getdetail_nonarticle_count'] = cur['total_getdetail_nonarticle_count'] / (cur['total_editnotes_count'] + cur['total_search_count'] + cur['total_getdetail_nonarticle_count'] + cur['total_addelement_count'] + cur['total_addconnection_count'])
+        cur['percentage_addelement_count'] = cur['total_addelement_count'] / (cur['total_editnotes_count'] + cur['total_search_count'] + cur['total_getdetail_nonarticle_count'] + cur['total_addelement_count'] + cur['total_addconnection_count'])
+        cur['percentage_addconnection_count'] = cur['total_addconnection_count'] / (cur['total_editnotes_count'] + cur['total_search_count'] + cur['total_getdetail_nonarticle_count'] + cur['total_addelement_count'] + cur['total_addconnection_count'])
+        cur['percentage_releveant_search'] = 'NA'
+        if cur['total_search_count'] != 0:
+            cur['percentage_releveant_search'] = cur['total_relevant_search_count']/cur['total_search_count']
 
 
 
@@ -304,6 +325,14 @@ for key, value in result.items():
         else:
             cur['avg_time_per_irrelevant_article'] = 'NA'
 
+        if cur['relevant_article_read_count_in_path'] != 0 or cur['irrelevant_article_read_count_in_path'] != 0:
+            cur['percentage_relevant_read_count_in_path'] = cur['relevant_article_read_count_in_path']/cur['total_exploration_path_length']
+            cur['percentage_irrelevant_read_count_in_path'] = cur['irrelevant_article_read_count_in_path']/cur['total_exploration_path_length']
+        else:
+            cur['percentage_relevant_read_count_in_path'] = 'NA'
+            cur['percentage_irrelevant_read_count_in_path'] = 'NA'
+
+
         for article_name, article_name_count in cur['article_stats'].items():
             cur['avg_revisitation_rate_total_articles'] += article_name_count
             if articles_info[article_name]['RelevantToTask'] == 'yes':
@@ -326,21 +355,100 @@ for key, value in result.items():
     cur['LOC'] = 'NA'
     if key in participants_info:
         cur['LOC'] = participants_info[key]['LOC']
+        cur['LOC-score'] = participants_info[key]['LOC-score']
+        cur['Extraversion-score'] = participants_info[key]['Extraversion-score']
+
+    cur['percentage_editnotes_count'] = cur['total_editnotes_count'] / (
+                cur['total_editnotes_count'] + cur['total_search_count'] + cur['total_getdetail_nonarticle_count'] +
+                cur['total_addelement_count'] + cur['total_addconnection_count'] + cur['total_exploration_path_length'])
+
+    cur['percentage_search_count'] = cur['total_search_count'] / (
+                cur['total_editnotes_count'] + cur['total_search_count'] + cur['total_getdetail_nonarticle_count'] +
+                cur['total_addelement_count'] + cur['total_addconnection_count'] + cur['total_exploration_path_length'])
+
+    cur['percentage_getdetail_nonarticle_count'] = cur['total_getdetail_nonarticle_count'] / (
+                cur['total_editnotes_count'] + cur['total_search_count'] + cur['total_getdetail_nonarticle_count'] +
+                cur['total_addelement_count'] + cur['total_addconnection_count'] + cur['total_exploration_path_length'])
+
+    cur['percentage_addelement_count'] = cur['total_addelement_count'] / (
+                cur['total_editnotes_count'] + cur['total_search_count'] + cur['total_getdetail_nonarticle_count'] +
+                cur['total_addelement_count'] + cur['total_addconnection_count'] + cur['total_exploration_path_length'])
+
+    cur['percentage_addconnection_count'] = cur['total_addconnection_count'] / (
+                cur['total_editnotes_count'] + cur['total_search_count'] + cur['total_getdetail_nonarticle_count'] +
+                cur['total_addelement_count'] + cur['total_addconnection_count'] + cur['total_exploration_path_length'])
+
+    cur['percentage_article_read_count'] = cur['total_exploration_path_length'] / (
+                cur['total_editnotes_count'] + cur['total_search_count'] + cur['total_getdetail_nonarticle_count'] +
+                cur['total_addelement_count'] + cur['total_addconnection_count'] + cur['total_exploration_path_length'])
 
 no_NA_result_dict = {}
 NA_flag = 0
+all_names = []
+all_good_names = []
+all_good_names_locscores = []
+all_good_names_set = set()
+has_NA_names = []
+has_NA_names_set = set()
+no_loc_names = []
+
+has_loc_names = []
+has_loc_has_some_NA_names = []
 for key, value in result.items():
     # print(key)
+    all_names.append(key)
     for k, v in value.items():
-        # if k != 'raw_data_list' and k != 'raw_any_data_list':
+        # if k != 'raw_data_list' and k != 'raw_any_data_list' and k != 'article_stats' and k != 'articles_actions_info_dict':
         #     print(k,v)
+        if k == 'LOC' and v == 'NA':
+            print(key, 'no LOC')
+            no_loc_names.append(key)
         if v == 'NA':
             NA_flag = 1
+            has_NA_names_set.add(key)
+            if key not in has_NA_names:
+                has_NA_names.append(key)
     if NA_flag == 0:
         no_NA_result_dict[key] = value
+        all_good_names.append(key)
+        all_good_names_locscores.append(int(no_NA_result_dict[key]['LOC-score']))
+        all_good_names_set.add(key)
+
     NA_flag = 0
 
-# print(len(no_NA_result_dict))
+for name in has_NA_names:
+    if result[name]['LOC'] != 'NA':
+        has_loc_has_some_NA_names.append(name)
+
+compare = lambda x, y: collections.Counter(x) == collections.Counter(y)
+print(compare(has_NA_names, no_loc_names))
+print(has_NA_names_set)
+print(no_loc_names)
+
+print('all_names',len(all_names))
+print('all_good_names', len(all_good_names))
+print('has_NA_names', len(has_NA_names))
+print('has_loc_has_some_NA_names',len(has_loc_has_some_NA_names))
+print('no_loc_names',len(no_loc_names))
+
+internal_names = []
+external_names = []
+intermediate_names = []
+for name in all_good_names:
+    if result[name]['LOC'] == 'Internal':
+        internal_names.append(name)
+    elif result[name]['LOC'] == 'External':
+        external_names.append(name)
+    elif result[name]['LOC'] == 'Intermediate':
+        intermediate_names.append(name)
+print('internals', len(internal_names))
+print('externals', len(external_names))
+print('intermediates', len(intermediate_names))
+
+print(names_in_survey_csv_set.difference(set(all_names)))
+
+
+
 df_formatted_dict = {}
 df_formatted_dict['names'] = []
 df_columns=[]
@@ -390,6 +498,101 @@ html = df.groupby('LOC', as_index=False).mean().to_html(classes='table table-str
 text_file = open("ind2.html", "w")
 text_file.write(html)
 text_file.close()
+
+df.groupby('LOC', as_index=False).mean().to_csv(r'mean_results.csv', index = False)
+
+# fig = px.scatter(df, x="LOC-score", y="total_article_duration",color="LOC", trendline="ols")
+#
+#
+# results = px.get_trendline_results(fig)
+# print(results)
+
+fig = px.scatter(
+    df,
+    x="Extraversion-score",
+    y="total_article_duration",
+trendline="ols",color='LOC'
+)
+
+# linear regression
+regline = sm.OLS(df['total_article_duration'],sm.add_constant(df['Extraversion-score'])).fit().fittedvalues
+
+# add linear regression line for whole sample
+fig.add_traces(go.Scatter(x=df['Extraversion-score'], y=regline,
+                          mode = 'lines',
+                          marker_color='blue',
+                          name='trend all')
+                          )
+
+fig.write_html("plot.html")
+
+participant_searchlist_dict = OrderedDict()
+participant_actionlist_dict = OrderedDict()
+participant_articleread_dict = OrderedDict()
+participant_editnotes_dict = OrderedDict()
+
+all_search_list = []
+all_search_actors_list = []
+all_search_day_list = []
+all_search_time_list = []
+all_search_relevancy_list = []
+all_search_actors_locscore_list = []
+all_search_actors_loc_list = []
+for key, value in no_NA_result_dict.items():
+    print("name: ", key)
+    count_search = 0
+    for k, v in value.items():
+        if k == 'raw_any_data_list':
+            for action_row in v:
+                if action_row[ActionType_enum] == 'Search':
+
+                    all_search_list.append(key + str(count_search))
+                    all_search_actors_list.append(key)
+                    all_search_day_list.append(action_row[Day_enum])
+                    all_search_time_list.append(datetime.strptime(action_row[Time_enum], '%HH %MM %SS'))
+                    all_search_actors_locscore_list.append(no_NA_result_dict[key]['LOC-score'])
+                    all_search_actors_loc_list.append(no_NA_result_dict[key]['LOC'])
+                    if any(ext in action_row[ActionParameters_enum] for ext in keywords_list):
+                        all_search_relevancy_list.append('relevant')
+                    else:
+                        all_search_relevancy_list.append('irrelevant')
+                    count_search += 1
+
+all_search_df = pd.DataFrame(
+    {'search_action_names': all_search_list,
+     'search_actors': all_search_actors_list,
+     'search_days': all_search_day_list,
+     'search_times': all_search_time_list,
+     'search_relevancies':all_search_relevancy_list,
+     'search_actors_locscore':all_search_actors_locscore_list,
+     'search_actors_loc':all_search_actors_loc_list
+    })
+
+
+print(all_search_df)
+all_good_names_sorted_by_locscore = [x for _,x in sorted(zip(all_good_names_locscores,all_good_names))]
+
+search_scatter_fig = px.scatter(all_search_df, x="search_times", y="search_actors",
+                                labels={
+                                    "search_actors": "search_actors",
+                                },
+                                facet_col="search_days", color="search_relevancies", hover_data=all_search_df.columns)
+search_scatter_fig.update_yaxes(categoryorder='array', categoryarray= all_good_names_sorted_by_locscore)
+search_scatter_fig.update_layout(margin=dict(l=300))
+search_scatter_fig.update_xaxes(tickformat='%H:%M')
+
+search_scatter_fig.add_annotation(xref='paper', x=-0.15, yref='paper', y=0.1,
+            text="<--- More Internal      |      More External --->",
+            showarrow=False,
+            textangle=-90,
+            font_size= 18
+            )
+search_scatter_fig.add_hrect(y0=22.5, y1=24.5, line_width=0, fillcolor="red", opacity=0.2,annotation_text="Externals")
+search_scatter_fig.add_hrect(y0=12.5, y1=22.5, line_width=0, fillcolor="blue", opacity=0.2,annotation_text="Intermediates")
+search_scatter_fig.add_hrect(y0=-0.5, y1=12.5, line_width=0, fillcolor="green", opacity=0.2,annotation_text="Internals")
+
+search_scatter_fig.write_html("search_scatter.html")
+
 
 #plt.show()
 
