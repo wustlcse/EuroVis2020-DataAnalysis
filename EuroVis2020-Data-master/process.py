@@ -39,6 +39,10 @@ result = OrderedDict() # stores the data collection results
 articles_info = OrderedDict() # stores article information
 participants_info = OrderedDict() # stores participant info
 
+employee_record_relevant_dict = OrderedDict()
+email_header_relevant_dict = OrderedDict()
+edit_notes_relevant_dict = OrderedDict()
+
 
 with open('data/eventlog.csv', 'r') as file:
     reader = csv.reader(file)
@@ -84,6 +88,30 @@ with open('data/survey.csv', 'r') as file:
         participants_info[current_participant_id]['LOC'] = row[len(row)-1]
         participants_info[current_participant_id]['LOC-score'] = int(row[len(row)-2])
         participants_info[current_participant_id]['Extraversion-score'] = int(row[153])
+
+with open('Assignment1 Data/Assignment1 Data/EmployeeRecords.csv', 'r') as file:
+    reader_employee_record_relevant = csv.reader(file)
+    next(reader_employee_record_relevant)
+    count_employee_record_relevant = 1
+    for row in reader_employee_record_relevant:
+        current_lastname = row[0]
+        if any(ext.lower() in current_lastname.lower() for ext in keywords_list):
+            employee_record_relevant_dict['Employee Record ' + str(count_employee_record_relevant)] = 'yes'
+        else:
+            employee_record_relevant_dict['Employee Record ' + str(count_employee_record_relevant)] = 'no'
+        count_employee_record_relevant += 1
+
+with open('Assignment1 Data/Assignment1 Data/email headers.csv', 'r') as file:
+    reader_email_header_relevant = csv.reader(file)
+    next(reader_email_header_relevant)
+    count_email_header_relevant = 1
+    for row in reader_email_header_relevant:
+        email_from = row[0]
+        if any(ext.lower() in email_from.lower() for ext in keywords_list):
+            email_header_relevant_dict['Email Header ' + str(count_email_header_relevant)] = 'yes'
+        else:
+            email_header_relevant_dict['Email Header ' + str(count_email_header_relevant)] = 'no'
+        count_email_header_relevant += 1
 
 
 for key, value in result.items():
@@ -641,6 +669,7 @@ all_resumeread_df = pd.DataFrame(
      'resumeread_actors': all_resumeread_actors_list,
      'resumeread_days': all_resumeread_day_list,
      'resumeread_times': all_resumeread_time_list,
+
      'resumeread_relevancies':all_resumeread_relevancy_list,
      'resumeread_actors_locscore':all_resumeread_actors_locscore_list,
      'resumeread_actors_loc':all_resumeread_actors_loc_list,
@@ -672,12 +701,159 @@ resumeread_scatter_fig.add_hrect(y0=-0.5, y1=12.5, line_width=0, fillcolor="gree
 
 resumeread_scatter_fig.write_html("resumeread_scatter.html")
 
-def sequence_plot(all_action_list,all_action_actors_list,all_action_day_list,all_action_time_list,all_action_relevancy_list,all_action_actors_locscore_list,all_action_actors_loc_list,all_action_content_list):
+print(employee_record_relevant_dict)
+print(email_header_relevant_dict)
 
 
 
 
+def sequence_plot(action,yaxis_ticks_order):
+    all_action_list = []
+    all_action_actors_list = []
+    all_action_day_list = []
+    all_action_time_list = []
+    all_action_relevancy_list = []
+    all_action_actors_locscore_list = []
+    all_action_actors_loc_list = []
+    all_action_content_list = []
+    condition_for_bin = False
+    condition_for_relevancy = False
+    for key, value in no_NA_result_dict.items():
+        # print("name: ", key)
+        count_action = 0
+        for k, v in value.items():
+            if k == 'raw_any_data_list':
+                for action_row in v:
+                    if action == 'search':
+                        condition_for_bin = action_row[ActionType_enum] == 'Search'
+                        # condition_for_relevancy = any(ext.lower() in action_row[ActionParameters_enum].lower()
+                        #                               or action_row[ActionParameters_enum].lower()[:3] == ext.lower()[
+                        #                                                                                   :3]
+                        #                               for ext in keywords_list)
+                    elif action == 'readresume':
+                        condition_for_bin = action_row[ActionType_enum] == 'GetDetail' \
+                                            and ('Resume' in action_row[ActionParameters_enum]
+                                                 or 'Bio' in action_row[ActionParameters_enum])
+                        # condition_for_relevancy = any(ext.lower() in
+                        #                               action_row[ActionParameters_enum].lower() for ext in
+                        #                               keywords_list)
+                    elif action == 'read_employee_record':
+                        condition_for_bin = action_row[ActionType_enum] == 'GetDetail' \
+                                            and 'Record' in action_row[ActionParameters_enum]
+                        # condition_for_relevancy = False
+                    elif action == 'read_email_header':
+                        condition_for_bin = action_row[ActionType_enum] == 'GetDetail' \
+                                            and 'Header' in action_row[ActionParameters_enum]
+                        # condition_for_relevancy = False
+                    elif action == 'read_article':
+                        condition_for_bin = action_row[ActionType_enum] == 'GetDetail' and 'Article' in action_row[
+                            ActionParameters_enum]
+                        # print(action_row)
+                        # condition_for_relevancy = articles_info[action_row[ActionParameters_enum]]['RelevantToTask'] == 'yes'
+                    elif action == 'add_element':
+                        condition_for_bin = action_row[ActionType_enum] == 'AddElement'
+                        # condition_for_relevancy = any(ext.lower() in
+                        #                               action_row[ActionParameters_enum].lower() for ext in
+                        #                               keywords_list)
+                    elif action == 'add_connection':
+                        condition_for_bin = action_row[ActionType_enum] == 'AddConnection'
+                        # condition_for_relevancy = any(ext.lower() in
+                        #                               action_row[ActionParameters_enum].lower() for ext in
+                        #                               keywords_list)
+                    elif action == 'edit_notes':
+                        condition_for_bin = action_row[ActionType_enum] == 'EditNotes'
+                        # condition_for_relevancy = False
+                    if condition_for_bin:
+                        if action == 'search':
+                            condition_for_relevancy = any(ext.lower() in action_row[ActionParameters_enum].lower()
+                                                          or action_row[ActionParameters_enum].lower()[
+                                                             :3] == ext.lower()[
+                                                                    :3]
+                                                          for ext in keywords_list)
+                        elif action == 'readresume':
+                            condition_for_relevancy = any(ext.lower() in
+                                                          action_row[ActionParameters_enum].lower() for ext in
+                                                          keywords_list)
+                        elif action == 'read_employee_record':
+                            condition_for_relevancy = employee_record_relevant_dict[action_row[ActionParameters_enum]] == 'yes'
+                        elif action == 'read_email_header':
+                            condition_for_relevancy = email_header_relevant_dict[action_row[ActionParameters_enum]] == 'yes'
+                        elif action == 'read_article':
+                            condition_for_relevancy = articles_info[action_row[ActionParameters_enum]][
+                                                          'RelevantToTask'] == 'yes'
+                        elif action == 'add_element':
+                            condition_for_relevancy = any(ext.lower() in
+                                                          action_row[ActionParameters_enum].lower() for ext in
+                                                          keywords_list)
+                        elif action == 'add_connection':
+                            condition_for_relevancy = any(ext.lower() in
+                                                          action_row[ActionParameters_enum].lower() for ext in
+                                                          keywords_list)
+                        elif action == 'edit_notes':
+                            condition_for_relevancy = False
+                        all_action_list.append(key + action + str(count_action))
+                        all_action_actors_list.append(key)
+                        all_action_day_list.append(action_row[Day_enum])
+                        all_action_time_list.append(datetime.strptime(action_row[Time_enum], '%HH %MM %SS'))
+                        all_action_actors_locscore_list.append(no_NA_result_dict[key]['LOC-score'])
+                        all_action_actors_loc_list.append(no_NA_result_dict[key]['LOC'])
+                        all_action_content_list.append(action_row[ActionParameters_enum])
+                        if condition_for_relevancy:
+                            all_action_relevancy_list.append('relevant')
+                        else:
+                            all_action_relevancy_list.append('irrelevant')
+                        count_action += 1
 
+
+    all_action_df = pd.DataFrame(
+        {action + '_action_names': all_action_list,
+         action + '_actors': all_action_actors_list,
+         action + '_days': all_action_day_list,
+         action + '_times': all_action_time_list,
+         action + '_relevancies': all_action_relevancy_list,
+         action + '_actors_locscore': all_action_actors_locscore_list,
+         action + '_actors_loc': all_action_actors_loc_list,
+         action + '_content': all_action_content_list
+         })
+    action_scatter_fig = px.scatter(all_action_df, x=action + "_times", y=action + "_actors",
+                                    labels={
+                                        action + "_actors": action + "_actors",
+                                    },
+                                    color_discrete_map={
+                                        "irrelevant": "purple",
+                                        "relevant": "red"
+                                    },
+                                    facet_col=action + "_days", color=action + "_relevancies",
+                                    hover_data=all_action_df.columns)
+    action_scatter_fig.update_yaxes(categoryorder='array', categoryarray=yaxis_ticks_order)
+    action_scatter_fig.update_layout(margin=dict(l=300))
+    action_scatter_fig.update_xaxes(tickformat='%H:%M')
+
+    action_scatter_fig.add_annotation(xref='paper', x=-0.15, yref='paper', y=0.1,
+                                      text="<--- More Internal      |      More External --->",
+                                      showarrow=False,
+                                      textangle=-90,
+                                      font_size=18
+                                      )
+    action_scatter_fig.add_hrect(y0=22.5, y1=24.5, line_width=0, fillcolor="red", opacity=0.2,
+                                 annotation_text="Externals")
+    action_scatter_fig.add_hrect(y0=12.5, y1=22.5, line_width=0, fillcolor="blue", opacity=0.2,
+                                 annotation_text="Intermediates")
+    action_scatter_fig.add_hrect(y0=-0.5, y1=12.5, line_width=0, fillcolor="green", opacity=0.2,
+                                 annotation_text="Internals")
+    action_scatter_fig.write_html(action+"_scatter.html")
+    # return all_action_list, all_action_actors_list, all_action_day_list, all_action_time_list,\
+    #        all_action_relevancy_list, all_action_actors_locscore_list, all_action_actors_loc_list, all_action_content_list
+    return all_action_df
+
+
+
+all_read_employee_record_df = sequence_plot("read_employee_record",all_good_names_sorted_by_locscore)
+all_read_email_header_df = sequence_plot("read_email_header", all_good_names_sorted_by_locscore)
+all_add_element_df = sequence_plot("add_element",all_good_names_sorted_by_locscore)
+all_add_connection_df = sequence_plot("add_connection",all_good_names_sorted_by_locscore)
+all_read_article_df = sequence_plot("read_article", all_good_names_sorted_by_locscore)
+all_edit_notes_df = sequence_plot("edit_notes",all_good_names_sorted_by_locscore)
 
 
 
