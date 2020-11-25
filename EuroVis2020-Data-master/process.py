@@ -28,8 +28,11 @@ Group_enum = 6
 Day_enum = 7
 duration_enum = 8
 
-keywords_list = ['Henk','Brodogi','Carmine','Osvaldo','Yanick','Cato','Loreto','Katell','Ale','Loreto','Hanne',
-                 'Jeroen','Karel','Valentine','Mies','Elian','Silvia','Marek','Vann','Ferro','Rocha','Stefano']
+keywords_list = ['Henk','Brodogi','Carmine','Osvaldo','Yanick','Cato','Loreto','Katell','Ale','Hanne',
+                 'Jeroen','Karel','Valentine','Mies','Elian','Silvia','Marek','Lucio','Jakab','Joachim',
+                 'Jirair','Mandor','Isia','Vann','Ferro',
+                 'Rocha','Stefano','Hennie','Inga','Ruscella','Haber','Bodrogi','Carla','Forluniau',
+                 'Cornelia','Lais','Minke']
 
 
 result = OrderedDict() # stores the data collection results
@@ -202,7 +205,7 @@ for key, value in result.items():
         for any_data_row in cur['raw_any_data_list']:
             if any_data_row[ActionType_enum] == 'GetDetail' and 'Article' not in any_data_row[ActionParameters_enum]:
                 cur['total_getdetail_nonarticle_count'] += 1
-                if any(ext in any_data_row[ActionParameters_enum] for ext in keywords_list):
+                if any(ext.lower() in any_data_row[ActionParameters_enum].lower() for ext in keywords_list):
                     cur['total_relevant_getdetail_nonarticle_count'] += 1
 
             if any_data_row[ActionType_enum] == 'EditNotes':
@@ -210,20 +213,22 @@ for key, value in result.items():
 
             if any_data_row[ActionType_enum] == 'Search':
                 cur['total_search_count'] += 1
-                if any(ext in any_data_row[ActionParameters_enum] for ext in keywords_list):
+                if any(ext.lower() in any_data_row[ActionParameters_enum].lower()
+                       or any_data_row[ActionParameters_enum].lower()[:3] == ext.lower()[:3] for ext in keywords_list):
                     cur['total_relevant_search_count'] += 1
 
             if any_data_row[ActionType_enum] == 'AddElement':
                 cur['total_addelement_count'] += 1
-                if any(ext in any_data_row[ActionParameters_enum] for ext in keywords_list):
+                if any(ext.lower() in any_data_row[ActionParameters_enum].lower() for ext in keywords_list):
                     cur['total_relevant_addelement_count'] += 1
 
             if any_data_row[ActionType_enum] == 'AddConnection':
                 cur['total_addconnection_count'] += 1
-                if any(ext in any_data_row[ActionParameters_enum] for ext in keywords_list):
+                if any(ext.lower() in any_data_row[ActionParameters_enum].lower() for ext in keywords_list):
                     cur['total_relevant_addconnection_count'] += 1
 
-            if any_data_row[ActionType_enum] == 'GetDetail' and 'Resume' in any_data_row[ActionParameters_enum]:
+            if any_data_row[ActionType_enum] == 'GetDetail' \
+                    and ('Resume' in any_data_row[ActionParameters_enum] or 'Bio' in any_data_row[ActionParameters_enum]):
                 cur['total_resume_read_count_in_path'] += 1 # finish cur['total_resume_read_count_in_path']
 
             if any_data_row[ActionType_enum] == 'GetDetail' and 'Record' in any_data_row[ActionParameters_enum]:
@@ -538,6 +543,7 @@ all_search_time_list = []
 all_search_relevancy_list = []
 all_search_actors_locscore_list = []
 all_search_actors_loc_list = []
+all_search_content_list = []
 for key, value in no_NA_result_dict.items():
     print("name: ", key)
     count_search = 0
@@ -546,13 +552,15 @@ for key, value in no_NA_result_dict.items():
             for action_row in v:
                 if action_row[ActionType_enum] == 'Search':
 
-                    all_search_list.append(key + str(count_search))
+                    all_search_list.append(key + 'search' + str(count_search))
                     all_search_actors_list.append(key)
                     all_search_day_list.append(action_row[Day_enum])
                     all_search_time_list.append(datetime.strptime(action_row[Time_enum], '%HH %MM %SS'))
                     all_search_actors_locscore_list.append(no_NA_result_dict[key]['LOC-score'])
                     all_search_actors_loc_list.append(no_NA_result_dict[key]['LOC'])
-                    if any(ext in action_row[ActionParameters_enum] for ext in keywords_list):
+                    all_search_content_list.append(action_row[ActionParameters_enum])
+                    if any(ext.lower() in action_row[ActionParameters_enum].lower()
+                           or any_data_row[ActionParameters_enum].lower()[:3] == ext.lower()[:3] for ext in keywords_list):
                         all_search_relevancy_list.append('relevant')
                     else:
                         all_search_relevancy_list.append('irrelevant')
@@ -565,7 +573,8 @@ all_search_df = pd.DataFrame(
      'search_times': all_search_time_list,
      'search_relevancies':all_search_relevancy_list,
      'search_actors_locscore':all_search_actors_locscore_list,
-     'search_actors_loc':all_search_actors_loc_list
+     'search_actors_loc':all_search_actors_loc_list,
+     'search_content':all_search_content_list
     })
 
 
@@ -575,6 +584,10 @@ all_good_names_sorted_by_locscore = [x for _,x in sorted(zip(all_good_names_locs
 search_scatter_fig = px.scatter(all_search_df, x="search_times", y="search_actors",
                                 labels={
                                     "search_actors": "search_actors",
+                                },
+                                color_discrete_map={
+                                    "irrelevant": "purple",
+                                    "relevant": "red"
                                 },
                                 facet_col="search_days", color="search_relevancies", hover_data=all_search_df.columns)
 search_scatter_fig.update_yaxes(categoryorder='array', categoryarray= all_good_names_sorted_by_locscore)
@@ -592,6 +605,90 @@ search_scatter_fig.add_hrect(y0=12.5, y1=22.5, line_width=0, fillcolor="blue", o
 search_scatter_fig.add_hrect(y0=-0.5, y1=12.5, line_width=0, fillcolor="green", opacity=0.2,annotation_text="Internals")
 
 search_scatter_fig.write_html("search_scatter.html")
+
+all_resumeread_list = []
+all_resumeread_actors_list = []
+all_resumeread_day_list = []
+all_resumeread_time_list = []
+all_resumeread_relevancy_list = []
+all_resumeread_actors_locscore_list = []
+all_resumeread_actors_loc_list = []
+all_resumeread_content_list = []
+for key, value in no_NA_result_dict.items():
+    # print("name: ", key)
+    count_resumeread = 0
+    for k, v in value.items():
+        if k == 'raw_any_data_list':
+            for action_row in v:
+                if action_row[ActionType_enum] == 'GetDetail' and \
+                        ('Resume' in action_row[ActionParameters_enum] or 'Bio' in action_row[ActionParameters_enum]):
+
+                    all_resumeread_list.append(key + 'resume' + str(count_resumeread))
+                    all_resumeread_actors_list.append(key)
+                    all_resumeread_day_list.append(action_row[Day_enum])
+                    all_resumeread_time_list.append(datetime.strptime(action_row[Time_enum], '%HH %MM %SS'))
+                    all_resumeread_actors_locscore_list.append(no_NA_result_dict[key]['LOC-score'])
+                    all_resumeread_actors_loc_list.append(no_NA_result_dict[key]['LOC'])
+                    all_resumeread_content_list.append(action_row[ActionParameters_enum])
+                    if any(ext.lower() in action_row[ActionParameters_enum].lower() for ext in keywords_list):
+                        all_resumeread_relevancy_list.append('relevant')
+                    else:
+                        all_resumeread_relevancy_list.append('irrelevant')
+                    count_resumeread += 1
+
+all_resumeread_df = pd.DataFrame(
+    {'resumeread_action_names': all_resumeread_list,
+     'resumeread_actors': all_resumeread_actors_list,
+     'resumeread_days': all_resumeread_day_list,
+     'resumeread_times': all_resumeread_time_list,
+     'resumeread_relevancies':all_resumeread_relevancy_list,
+     'resumeread_actors_locscore':all_resumeread_actors_locscore_list,
+     'resumeread_actors_loc':all_resumeread_actors_loc_list,
+     'resumeread_content':all_resumeread_content_list
+    })
+
+resumeread_scatter_fig = px.scatter(all_resumeread_df, x="resumeread_times", y="resumeread_actors",
+                                labels={
+                                    "resumeread_actors": "resumeread_actors",
+                                },
+                                color_discrete_map={
+                                    "irrelevant": "purple",
+                                    "relevant": "red"
+                                },
+                                facet_col="resumeread_days", color="resumeread_relevancies", hover_data=all_resumeread_df.columns)
+resumeread_scatter_fig.update_yaxes(categoryorder='array', categoryarray= all_good_names_sorted_by_locscore)
+resumeread_scatter_fig.update_layout(margin=dict(l=300))
+resumeread_scatter_fig.update_xaxes(tickformat='%H:%M')
+
+resumeread_scatter_fig.add_annotation(xref='paper', x=-0.15, yref='paper', y=0.1,
+            text="<--- More Internal      |      More External --->",
+            showarrow=False,
+            textangle=-90,
+            font_size= 18
+            )
+resumeread_scatter_fig.add_hrect(y0=22.5, y1=24.5, line_width=0, fillcolor="red", opacity=0.2,annotation_text="Externals")
+resumeread_scatter_fig.add_hrect(y0=12.5, y1=22.5, line_width=0, fillcolor="blue", opacity=0.2,annotation_text="Intermediates")
+resumeread_scatter_fig.add_hrect(y0=-0.5, y1=12.5, line_width=0, fillcolor="green", opacity=0.2,annotation_text="Internals")
+
+resumeread_scatter_fig.write_html("resumeread_scatter.html")
+
+def sequence_plot(all_action_list,all_action_actors_list,all_action_day_list,all_action_time_list,all_action_relevancy_list,all_action_actors_locscore_list,all_action_actors_loc_list,all_action_content_list):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #plt.show()
