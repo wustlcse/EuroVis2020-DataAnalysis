@@ -241,8 +241,7 @@ for key, value in result.items():
 
             if any_data_row[ActionType_enum] == 'Search':
                 cur['total_search_count'] += 1
-                if any(ext.lower() in any_data_row[ActionParameters_enum].lower()
-                       or any_data_row[ActionParameters_enum].lower()[:3] == ext.lower()[:3] for ext in keywords_list):
+                if any(ext.lower() in any_data_row[ActionParameters_enum].lower() for ext in keywords_list):
                     cur['total_relevant_search_count'] += 1
 
             if any_data_row[ActionType_enum] == 'AddElement':
@@ -572,6 +571,7 @@ all_search_relevancy_list = []
 all_search_actors_locscore_list = []
 all_search_actors_loc_list = []
 all_search_content_list = []
+all_search_tag_list = []
 for key, value in no_NA_result_dict.items():
     print("name: ", key)
     count_search = 0
@@ -581,6 +581,7 @@ for key, value in no_NA_result_dict.items():
                 if action_row[ActionType_enum] == 'Search':
 
                     all_search_list.append(key + 'search' + str(count_search))
+                    all_search_tag_list.append("search")
                     all_search_actors_list.append(key)
                     all_search_day_list.append(action_row[Day_enum])
                     all_search_time_list.append(datetime.strptime(action_row[Time_enum], '%HH %MM %SS'))
@@ -588,7 +589,7 @@ for key, value in no_NA_result_dict.items():
                     all_search_actors_loc_list.append(no_NA_result_dict[key]['LOC'])
                     all_search_content_list.append(action_row[ActionParameters_enum])
                     if any(ext.lower() in action_row[ActionParameters_enum].lower()
-                           or any_data_row[ActionParameters_enum].lower()[:3] == ext.lower()[:3] for ext in keywords_list):
+                            for ext in keywords_list):
                         all_search_relevancy_list.append('relevant')
                     else:
                         all_search_relevancy_list.append('irrelevant')
@@ -599,10 +600,12 @@ all_search_df = pd.DataFrame(
      'search_actors': all_search_actors_list,
      'search_days': all_search_day_list,
      'search_times': all_search_time_list,
+
      'search_relevancies':all_search_relevancy_list,
      'search_actors_locscore':all_search_actors_locscore_list,
      'search_actors_loc':all_search_actors_loc_list,
-     'search_content':all_search_content_list
+     'search_content':all_search_content_list,
+     'tag':all_search_tag_list,
     })
 
 
@@ -642,6 +645,7 @@ all_resumeread_relevancy_list = []
 all_resumeread_actors_locscore_list = []
 all_resumeread_actors_loc_list = []
 all_resumeread_content_list = []
+all_resumeread_tag_list = []
 for key, value in no_NA_result_dict.items():
     # print("name: ", key)
     count_resumeread = 0
@@ -652,6 +656,7 @@ for key, value in no_NA_result_dict.items():
                         ('Resume' in action_row[ActionParameters_enum] or 'Bio' in action_row[ActionParameters_enum]):
 
                     all_resumeread_list.append(key + 'resume' + str(count_resumeread))
+                    all_resumeread_tag_list.append("resumeread")
                     all_resumeread_actors_list.append(key)
                     all_resumeread_day_list.append(action_row[Day_enum])
                     all_resumeread_time_list.append(datetime.strptime(action_row[Time_enum], '%HH %MM %SS'))
@@ -673,7 +678,8 @@ all_resumeread_df = pd.DataFrame(
      'resumeread_relevancies':all_resumeread_relevancy_list,
      'resumeread_actors_locscore':all_resumeread_actors_locscore_list,
      'resumeread_actors_loc':all_resumeread_actors_loc_list,
-     'resumeread_content':all_resumeread_content_list
+     'resumeread_content':all_resumeread_content_list,
+     'tag':all_resumeread_tag_list
     })
 
 resumeread_scatter_fig = px.scatter(all_resumeread_df, x="resumeread_times", y="resumeread_actors",
@@ -716,6 +722,7 @@ def sequence_plot(action,yaxis_ticks_order):
     all_action_actors_locscore_list = []
     all_action_actors_loc_list = []
     all_action_content_list = []
+    all_action_tag_list = []
     condition_for_bin = False
     condition_for_relevancy = False
     for key, value in no_NA_result_dict.items():
@@ -792,6 +799,7 @@ def sequence_plot(action,yaxis_ticks_order):
                         elif action == 'edit_notes':
                             condition_for_relevancy = False
                         all_action_list.append(key + action + str(count_action))
+                        all_action_tag_list.append(action)
                         all_action_actors_list.append(key)
                         all_action_day_list.append(action_row[Day_enum])
                         all_action_time_list.append(datetime.strptime(action_row[Time_enum], '%HH %MM %SS'))
@@ -810,10 +818,12 @@ def sequence_plot(action,yaxis_ticks_order):
          action + '_actors': all_action_actors_list,
          action + '_days': all_action_day_list,
          action + '_times': all_action_time_list,
+
          action + '_relevancies': all_action_relevancy_list,
          action + '_actors_locscore': all_action_actors_locscore_list,
          action + '_actors_loc': all_action_actors_loc_list,
-         action + '_content': all_action_content_list
+         action + '_content': all_action_content_list,
+         'tag': all_action_tag_list
          })
     action_scatter_fig = px.scatter(all_action_df, x=action + "_times", y=action + "_actors",
                                     labels={
@@ -835,12 +845,12 @@ def sequence_plot(action,yaxis_ticks_order):
                                       textangle=-90,
                                       font_size=18
                                       )
-    action_scatter_fig.add_hrect(y0=22.5, y1=24.5, line_width=0, fillcolor="red", opacity=0.2,
-                                 annotation_text="Externals")
-    action_scatter_fig.add_hrect(y0=12.5, y1=22.5, line_width=0, fillcolor="blue", opacity=0.2,
-                                 annotation_text="Intermediates")
-    action_scatter_fig.add_hrect(y0=-0.5, y1=12.5, line_width=0, fillcolor="green", opacity=0.2,
-                                 annotation_text="Internals")
+    # action_scatter_fig.add_hrect(y0=22.5, y1=24.5, line_width=0, fillcolor="red", opacity=0.2,
+    #                              annotation_text="Externals")
+    # action_scatter_fig.add_hrect(y0=12.5, y1=22.5, line_width=0, fillcolor="blue", opacity=0.2,
+    #                              annotation_text="Intermediates")
+    # action_scatter_fig.add_hrect(y0=-0.5, y1=12.5, line_width=0, fillcolor="green", opacity=0.2,
+    #                              annotation_text="Internals")
     action_scatter_fig.write_html(action+"_scatter.html")
     # return all_action_list, all_action_actors_list, all_action_day_list, all_action_time_list,\
     #        all_action_relevancy_list, all_action_actors_locscore_list, all_action_actors_loc_list, all_action_content_list
@@ -854,6 +864,54 @@ all_add_element_df = sequence_plot("add_element",all_good_names_sorted_by_locsco
 all_add_connection_df = sequence_plot("add_connection",all_good_names_sorted_by_locscore)
 all_read_article_df = sequence_plot("read_article", all_good_names_sorted_by_locscore)
 all_edit_notes_df = sequence_plot("edit_notes",all_good_names_sorted_by_locscore)
+
+all_df = pd.DataFrame( np.concatenate( (all_search_df.values,
+                                        all_resumeread_df.values,
+                                        all_read_employee_record_df.values,
+                                        all_read_email_header_df.values,
+                                        all_add_element_df.values,
+                                        all_add_connection_df.values,
+                                        all_read_article_df.values,
+                                        all_edit_notes_df.values), axis=0 ) )
+all_df.columns = ['_action_names','_actors','_days','_times','_relevancies','_actors_locscore', '_actors_loc','_content','_tag']
+print(all_df)
+
+action_scatter_fig = px.scatter(all_df, x="_times", y="_actors",
+                                labels={
+                                    "_actors": "_actors",
+                                },
+                                color_discrete_map={
+                                    "irrelevant": "purple",
+                                    "relevant": "red"
+                                },
+                                symbol_map={
+                                    "irrelevant": "circle",
+                                    "relevant": "cross-open"
+                                },
+                                facet_col="_days", color="_tag",
+                                symbol='_relevancies',
+                                hover_data=all_df.columns)
+action_scatter_fig.update_yaxes(categoryorder='array', categoryarray=all_good_names_sorted_by_locscore)
+action_scatter_fig.update_layout(margin=dict(l=300))
+action_scatter_fig.update_xaxes(tickformat='%H:%M')
+
+action_scatter_fig.add_annotation(xref='paper', x=-0.15, yref='paper', y=0.1,
+                                  text="<--- More Internal      |      More External --->",
+                                  showarrow=False,
+                                  textangle=-90,
+                                  font_size=18
+                                  )
+# action_scatter_fig.add_hrect(y0=22.5, y1=24.5, line_width=0, fillcolor="red", opacity=0.2,
+#                              annotation_text="Externals")
+# action_scatter_fig.add_hrect(y0=12.5, y1=22.5, line_width=0, fillcolor="blue", opacity=0.2,
+#                              annotation_text="Intermediates")
+# action_scatter_fig.add_hrect(y0=-0.5, y1=12.5, line_width=0, fillcolor="green", opacity=0.2,
+#                              annotation_text="Internals")
+action_scatter_fig.write_html("_scatter.html")
+
+
+
+
 
 
 
