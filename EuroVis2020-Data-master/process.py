@@ -101,7 +101,7 @@ with open('Assignment1 Data/Assignment1 Data/EmployeeRecords.csv', 'r') as file:
             employee_record_relevant_dict['Employee Record ' + str(count_employee_record_relevant)] = 'no'
         count_employee_record_relevant += 1
 
-with open('Assignment1 Data/Assignment1 Data/email headers.csv', 'r') as file:
+with open('Assignment1 Data/Assignment1 Data/email headers.csv', 'r', encoding='cp1252') as file:
     reader_email_header_relevant = csv.reader(file)
     next(reader_email_header_relevant)
     count_email_header_relevant = 1
