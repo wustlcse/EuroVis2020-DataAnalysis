@@ -413,6 +413,15 @@ for key, value in result.items():
     cur['percentage_article_read_count'] = cur['total_exploration_path_length'] / (
                 cur['total_editnotes_count'] + cur['total_search_count'] + cur['total_getdetail_nonarticle_count'] +
                 cur['total_addelement_count'] + cur['total_addconnection_count'] + cur['total_exploration_path_length'])
+    if len(cur['raw_any_data_list']) == 0:
+        cur['last_editnotes_time'] = 'NA'
+    else:
+        edit_notes_temp_list = [action for action in cur['raw_any_data_list'] if action[ActionType_enum] == 'EditNotes']
+        if edit_notes_temp_list:
+            cur['last_editnotes_time'] = edit_notes_temp_list[len(edit_notes_temp_list)-1]
+        else:
+            cur['last_editnotes_time'] = 'NA'
+
 
 no_NA_result_dict = {}
 NA_flag = 0
@@ -707,8 +716,6 @@ resumeread_scatter_fig.add_hrect(y0=-0.5, y1=12.5, line_width=0, fillcolor="gree
 
 resumeread_scatter_fig.write_html("resumeread_scatter.html")
 
-print(employee_record_relevant_dict)
-print(email_header_relevant_dict)
 
 
 
@@ -845,12 +852,12 @@ def sequence_plot(action,yaxis_ticks_order):
                                       textangle=-90,
                                       font_size=18
                                       )
-    # action_scatter_fig.add_hrect(y0=22.5, y1=24.5, line_width=0, fillcolor="red", opacity=0.2,
-    #                              annotation_text="Externals")
-    # action_scatter_fig.add_hrect(y0=12.5, y1=22.5, line_width=0, fillcolor="blue", opacity=0.2,
-    #                              annotation_text="Intermediates")
-    # action_scatter_fig.add_hrect(y0=-0.5, y1=12.5, line_width=0, fillcolor="green", opacity=0.2,
-    #                              annotation_text="Internals")
+    action_scatter_fig.add_hrect(y0=22.5, y1=24.5, line_width=0, fillcolor="red", opacity=0.2,
+                                 annotation_text="Externals")
+    action_scatter_fig.add_hrect(y0=12.5, y1=22.5, line_width=0, fillcolor="blue", opacity=0.2,
+                                 annotation_text="Intermediates")
+    action_scatter_fig.add_hrect(y0=-0.5, y1=12.5, line_width=0, fillcolor="green", opacity=0.2,
+                                 annotation_text="Internals")
     action_scatter_fig.write_html(action+"_scatter.html")
     # return all_action_list, all_action_actors_list, all_action_day_list, all_action_time_list,\
     #        all_action_relevancy_list, all_action_actors_locscore_list, all_action_actors_loc_list, all_action_content_list
@@ -901,12 +908,12 @@ action_scatter_fig.add_annotation(xref='paper', x=-0.15, yref='paper', y=0.1,
                                   textangle=-90,
                                   font_size=18
                                   )
-# action_scatter_fig.add_hrect(y0=22.5, y1=24.5, line_width=0, fillcolor="red", opacity=0.2,
-#                              annotation_text="Externals")
-# action_scatter_fig.add_hrect(y0=12.5, y1=22.5, line_width=0, fillcolor="blue", opacity=0.2,
-#                              annotation_text="Intermediates")
-# action_scatter_fig.add_hrect(y0=-0.5, y1=12.5, line_width=0, fillcolor="green", opacity=0.2,
-#                              annotation_text="Internals")
+action_scatter_fig.add_hrect(y0=22.5, y1=24.5, line_width=0, fillcolor="red", opacity=0.2,
+                             annotation_text="Externals")
+action_scatter_fig.add_hrect(y0=12.5, y1=22.5, line_width=0, fillcolor="blue", opacity=0.2,
+                             annotation_text="Intermediates")
+action_scatter_fig.add_hrect(y0=-0.5, y1=12.5, line_width=0, fillcolor="green", opacity=0.2,
+                             annotation_text="Internals")
 action_scatter_fig.write_html("_scatter.html")
 
 
