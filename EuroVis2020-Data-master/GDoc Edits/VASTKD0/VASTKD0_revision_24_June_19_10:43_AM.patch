@@ -1,0 +1,11 @@
+--- VASTKD0_revision_23_June_19_10:42_AM	2019-06-27 13:14:16.000000000 -0400
++++ VASTKD0_revision_24_June_19_10:43_AM	2019-06-27 13:14:16.000000000 -0400
+@@ -29,5 +29,6 @@
+ VASCO-PAIS-(ESA) 
+ BARRANCO (CFO) 
+ STRUM (COO) 
+-  POK Information: 
++CAMPO-CORRENTE (CIO) 
++ POK Information: 
+ Edvard Vann- shares name of POK member 
+\ No newline at end of file

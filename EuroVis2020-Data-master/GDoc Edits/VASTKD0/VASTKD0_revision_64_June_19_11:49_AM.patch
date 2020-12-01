@@ -1,0 +1,55 @@
+--- VASTKD0_revision_63_June_19_11:48_AM	2019-06-27 13:14:16.000000000 -0400
++++ VASTKD0_revision_64_June_19_11:49_AM	2019-06-27 13:14:16.000000000 -0400
+@@ -101,6 +101,7 @@
+  Citizenship: Kronos 
+ Passport Issued: 01/01/2000 
+ Passport Expires: 01/01/2000 
++00 
+  Military Branch: Armed Forces of Kronos 
+ Discharge Date: 10/01/2005 
+ Discharge Type: General Discharge 
+@@ -116,7 +117,8 @@
+  Military Branch: Armed Forces of Kronos 
+ Discharge Date: 10/01/2008 
+ Discharge Type: General Discharge 
+- Hawelon, Claudio Position: Truck Driver (Facilities) 
++ Hawelon, Claudio 
++Position: Truck Driver (Facilities) 
+ Date of Hire: 03/13/2007 
+ Email: Claudio.Hawelon@gastech.com.kronos 
+  Sex: Male 
+@@ -139,10 +141,10 @@
+  Military Branch: Armed Forces of Kronos 
+ Discharge Date: 10/01/2007 
+ Discharge Type: General Discharge 
+- Coginian, Dante 
+-Position: Lead Janitor (Facilities) 
++ Coginian, Dante Position: Lead Janitor (Facilities) 
+ Date of Hire: 01/07/1995 
+-Email: Dante.Coginian@gastech.com.kronos  Sex: Male 
++Email: Dante.Coginian@gastech.com.kronos 
++ Sex: Male 
+ DOB: 12/01/1971 
+  Citizenship: Kronos 
+ Passport Issued: 01/01/2000 
+@@ -165,8 +167,8 @@
+  Arpa, Emile 
+ Position: Janitor (Facilities) 
+ Date of Hire: 03/18/2013 
+-Email: Emile.Arpa@gastech.com.kronos 
+- Sex: Male DOB: 10/01/1992 
++Email: Emile.Arpa@gastech.com.kronos  Sex: Male 
++DOB: 10/01/1992 
+  Citizenship: Kronos 
+ Passport Issued: 01/01/2000 
+ Passport Expires: 01/01/2000 
+@@ -189,8 +191,7 @@
+ Position: Assistant to Security Group Manager (Administration) 
+ Date of Hire: 12/22/2011 
+ Email: Cornelia.Lais@gastech.com.kronos 
+- Sex: Female 
+-DOB: 07/07/1991 
++ Sex: Female DOB: 07/07/1991 
+  Citizenship: Kronos 
+ Passport Issued: 01/01/2000 
+ Passport Expires: 01/01/2000 

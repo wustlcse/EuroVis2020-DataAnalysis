@@ -1,0 +1,14 @@
+--- VASTOIC_revision_99_July_18_11:30_AM	2019-07-30 15:57:21.000000000 -0400
++++ VASTOIC_revision_100_July_18_11:30_AM	2019-07-30 15:57:21.000000000 -0400
+@@ -64,4 +64,8 @@
+ Compare list to security personnel  
+ Get flight manifests from Abila airport  
+ Request security footage from GAStech HQ in Abila 
+-  
+\ No newline at end of file
++  1
++1
++2
++3
++4
+\ No newline at end of file

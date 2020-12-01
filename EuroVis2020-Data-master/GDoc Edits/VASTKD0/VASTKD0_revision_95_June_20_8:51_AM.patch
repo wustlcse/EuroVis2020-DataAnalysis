@@ -1,0 +1,29 @@
+--- VASTKD0_revision_94_June_20_8:49_AM	2019-06-27 13:14:16.000000000 -0400
++++ VASTKD0_revision_95_June_20_8:51_AM	2019-06-27 13:14:16.000000000 -0400
+@@ -185,13 +185,14 @@
+ Passport Expires: 01/01/2000 
+  Military Branch: Armed Forces of Kronos 
+ Discharge Date: 10/01/2011 
+- Discharge Type: General Discharge 
++Discharge Type: General Discharge 
+  Forluniau, Carla 
+ Position: Assistant to IT Group Manager (Administration) 
+ Date of Hire: 03/07/2005 
+ Email: Carla.Forluniau@gastech.com.kronos 
+  Sex: Female 
+-DOB: 06/02/1981  Citizenship: Kronos 
++DOB: 06/02/1981 
++ Citizenship: Kronos 
+ Passport Issued: 01/01/2000 
+ Passport Expires: 01/01/2000 
+  Military Branch: Armed Forces of Kronos 
+@@ -199,4 +200,6 @@
+ Discharge Type: General Discharge 
+    Recommendations to Law Enforcement: 
+ New Hire 
+-Passport Issue Dates All The Same 
+\ No newline at end of file
++Passport Issue Dates All The Same 
++Armed Forces of Kronos 
++Last Name Associated with previous POK Leader 
+\ No newline at end of file

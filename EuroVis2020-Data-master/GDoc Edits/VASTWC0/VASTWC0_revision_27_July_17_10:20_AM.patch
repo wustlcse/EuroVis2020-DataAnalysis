@@ -1,0 +1,18 @@
+--- VASTWC0_revision_26_July_17_10:19_AM	2019-07-30 15:54:47.000000000 -0400
++++ VASTWC0_revision_27_July_17_10:20_AM	2019-07-30 15:54:47.000000000 -0400
+@@ -34,7 +34,11 @@
+  12.Morlun, Adan- Truck Driver (Facilities) 
+ a.Kronos citizenship 
+ b.Kronos military service 
+- 13.Morlun, ValeriaMorluniau, Cecilia- TrucMorluniau, Ceciliak Driver (Facilities) 
++ 13.Morluniau, Cecilia- Truck Driver (Facilities) 
+ a.Kronos citizenship 
+ b.Kronos military service 
+-14. 
+\ No newline at end of file
++c. 
++ 14.Nant, Irene- Truck Driver (Facilities) 
++a.Kronos citizenship 
++b.Kronos military service 
++c. 
+\ No newline at end of file

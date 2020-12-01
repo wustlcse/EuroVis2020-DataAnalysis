@@ -1,0 +1,16 @@
+--- VASTRDI_revision_45_June_19_1:32_PM	2019-06-27 13:08:01.000000000 -0400
++++ VASTRDI_revision_46_June_19_1:33_PM	2019-06-27 13:08:01.000000000 -0400
+@@ -40,7 +40,7 @@
+ Ngohebo 
+   E-mail “Subject” Files  
+ -Sent on W/F in the afternoon over previous 2 weeks 
+- Sanjorge/MiesCEO - Facilities +2 
+-Arpa/OndaFacilities +2 - Site Manager 
+-Osvaldo/PantanalSecurity +1 -  
+-Dedos/Orilla 
+\ No newline at end of file
++ Sanjorge/MiesCEO - / Facilities +2 
++Arpa/OndaFacilities +2 -/ Site Manager 
++Osvaldo/PantanalSecurity +1 -/ CIO Admin Assistant 
++Dedos/OrillaEngineering Group Manager / Engineering +1 (under site manager) 
+\ No newline at end of file
